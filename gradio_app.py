@@ -7,29 +7,37 @@ import wavio
 
 audio_dir_input = "/home/sundae/Documentos/audio"
 image_dir_input = "/home/sundae/images"
-text_file_input = "/home/sundae/tags.txt"  # Replace with defaults paths
-recording = False
+text_file_input = "/home/sundae/tags.txt"
+recording_audio = False
+recording_text = False
 samplerate = 44100
 duration = 2
 
 def record_and_update_audio(image_dir, duration):
-    global recording
-    if recording:
+    global recording_audio
+    if recording_audio:
         filename = os.path.join(audio_dir_input, "mic.wav")
         record_audio(filename, duration, samplerate)
         similarity_text, top_images = audio_to_images(filename, image_dir)
         return similarity_text, top_images
     else:
         return "Recording stopped", []
-    
 
-def toggle_recording(image_dir):
-    global recording
-    recording = not recording
+def toggle_recording_audio(image_dir):
+    global recording_audio
+    recording_audio = not recording_audio
     if recording:
         return "Recording started...", [], gr.Button("Stop Recording")
     else:
         return "Recording stopped", [], gr.Button("Start Recording")
+
+def toggle_recording_text(text_file):
+    global recording_text
+    recording_text = not recording_text
+    if recording_text:
+        return "Recording started...", gr.Button("Stop Recording")
+    else:
+        return "Recording stopped", gr.Button("Start Recording")
 
 def load_text_lines(text_file):
     with open(text_file, 'r') as f:
@@ -54,8 +62,8 @@ def audio_to_texts(audio, text_lines):
     return leaderboard_text
 
 def record_and_update_text(text_file, duration):
-    global recording
-    if recording:
+    global recording_text
+    if recording_text:
         filename = os.path.join(audio_dir_input, "mic.wav")
         record_audio(filename, duration, samplerate)
         text_lines = load_text_lines(text_file)
@@ -74,24 +82,20 @@ def continuous_audio_recording(audio_dir, update_callback):
         print(f"Saved {filename}")
         update_callback()
 
-
 def stop_continuous_audio_recording():
     global recording_thread
     recording_thread.join()
     recording = False
     print("Stopped recording")
 
-
 def calculate_similarity_of_last_audio():
     similarity_text, top_images = audio_to_images_last(audio_dir_input, image_dir_input)
     print(f"similarity_text = {similarity_text}")
-    
     return similarity_text, top_images
 
 def update_top_continuous_images():
     similarity_text, top_images = audio_to_images_last(audio_dir_input, image_dir_input)
     top_continuous_images.value = top_images
-
     return similarity_text
 
 def record_audio(filename, duration, samplerate):
@@ -104,10 +108,8 @@ def record_audio(filename, duration, samplerate):
 def audio_to_images_last(audio_dir, image_dir):
     latest_audio_file = os.path.join(audio_dir, "mic.wav")
     print(f"Latest audio file: {latest_audio_file}")
-
     similarity_text, top_images = audio_to_images(latest_audio_file, image_dir)
     return similarity_text, top_images
-
 
 def audio_to_language(audio, language):
     inputs = {}
@@ -117,7 +119,6 @@ def audio_to_language(audio, language):
     with torch.no_grad():
         embeddings = model(inputs)
     return (embeddings['audio'] @ embeddings['language'].T).item()
-
 
 def audio_to_image(audio, image):
     print(f"Calculating similarity of audio {audio} to image {image}")
@@ -228,7 +229,7 @@ with gr.Blocks(title="AudioStuff 🐈") as demo:
             top_continuous_images = gr.Gallery(label='Top Images')
             record_button = gr.Button("Start Recording")
             record_button.click(
-                toggle_recording,
+                toggle_recording_audio,
                 inputs=[image_dir],
                 outputs=[out_continuous_similarity, top_continuous_images, record_button]
             )
@@ -236,7 +237,7 @@ with gr.Blocks(title="AudioStuff 🐈") as demo:
                 record_and_update_audio,
                 inputs=[image_dir, duration_slider],
                 outputs=[out_continuous_similarity, top_continuous_images],
-                every=duration
+                every=duration,
             )
         
         with gr.TabItem("Continuous Text Similarity"):
@@ -245,7 +246,7 @@ with gr.Blocks(title="AudioStuff 🐈") as demo:
             out_continuous_text_similarity = gr.Textbox(label='Similarity of Audio to Texts')
             record_button_text = gr.Button("Start Recording")
             record_button_text.click(
-                toggle_recording,
+                toggle_recording_text,
                 inputs=[text_file],
                 outputs=[out_continuous_text_similarity, record_button_text]
             )
@@ -253,7 +254,7 @@ with gr.Blocks(title="AudioStuff 🐈") as demo:
                 record_and_update_text,
                 inputs=[text_file, duration_slider_text],
                 outputs=[out_continuous_text_similarity],
-                every=duration
+                every=duration,
             )
 
 
