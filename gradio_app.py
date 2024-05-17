@@ -7,7 +7,7 @@ import wavio
 
 audio_dir_input = "/home/sundae/Documentos/audio"
 image_dir_input = "/home/sundae/images"
-text_file_input = "/home/sundae/tags.txt"
+text_file_input = "/home/sundae/emociones+.txt"
 recording_audio = False
 recording_text = False
 samplerate = 44100
