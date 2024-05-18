@@ -4,7 +4,7 @@ https://github.com/PKU-YuanGroup/LanguageBind
 
 ## 🤗 Demo
 
-* **Local demo.** Highly recommend trying out our web demo, which incorporates all features currently supported by LanguageBind.
+* **Local demo.** Highly recommend NOT trying out the web demo, which not incorporates all features currently supported by LanguageBind.
 ```bash
 python gradio_app.py
 ```
